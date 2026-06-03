@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistika Master Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            color: #1e3c72;
+            margin-top: 0;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #2a5298;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .data-box {
+            background-color: #f0f4f8;
+            border-left: 5px solid #2a5298;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+        }
+        .question {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #444;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        button {
+            background-color: #ffffff;
+            border: 2px solid #2a5298;
+            color: #2a5298;
+            padding: 12px 20px;
+            font-size: 1em;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+        button:hover {
+            background-color: #2a5298;
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .start-btn, .restart-btn {
+            background-color: #ff9800;
+            border: none;
+            color: white;
+            text-align: center;
+            font-size: 1.2em;
+            padding: 15px 30px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .start-btn:hover, .restart-btn:hover {
+            background-color: #e65100;
+        }
+        .feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 1.1em;
+            min-height: 24px;
+        }
+        .correct { color: #2e7d32; }
+        .wrong { color: #c62828; }
+        .hide { display: none; }
+        .score-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2a5298;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div id="start-screen">
+        <h1>🎮 STATISTIKA MASTER 🎮</h1>
+        <p style="color: #666; font-size: 1.1em;">Uji pemahaman Anda mengenai materi Pengorganisasian & Presentasi Data berdasarkan modul kuliah.</p>
+        <button class="start-btn" onclick="startGame()">Mulai Petualangan</button>
+    </div>
+
+    <div id="quiz-screen" class="hide">
+        <div class="progress-bar"><div id="progress" class="progress"></div></div>
+        <div id="level-indicator" style="font-weight: bold; color: #ff9800; margin-bottom: 5px;"></div>
+        <div id="data-display" class="data-box hide"></div>
+        <div id="question" class="question">Pertanyaan akan muncul di sini</div>
+        <div id="options" class="options-container"></div>
+        <div id="feedback" class="feedback"></div>
+    </div>
+
+    <div id="result-screen" class="hide">
+        <h1>🎉 Game Selesai! 🎉</h1>
+        <p>Total Skor Anda:</p>
+        <div id="final-score" class="score-display">0 / 100</div>
+        <p id="evaluation-msg" style="font-size: 1.1em; color: #555;"></p>
+        <button class="restart-btn" onclick="resetGame()">Main Lagi</button>
+    </div>
+</div>
+
+<script>
+    // Data pertanyaan berdasarkan isi file Sesi 3.pdf
+    const quizData = [
+        {
+            level: "LEVEL 1: TEBAK TEORI",
+            question: "Berdasarkan modul, apa saja 3 metode utama presentasi data?",
+            options: [
+                "Textual, Tabular, Graphical Displays",
+                "Audio, Video, Tabular",
+                "Nominal, Ordinal, Interval"
+            ],
+            correct: 0,
+            hasData: false
+        },
+        {
+            level: "LEVEL 1: TEBAK TEORI",
+            question: "Data statistik yang masih berada dalam bentuk dan struktur aslinya disebut...",
+            options: [
+                "Grouped Data (Data Berkelompok)",
+                "Raw Data (Data Mentah)",
+                "Frequency Data"
+            ],
+            correct: 1,
+            hasData: false
+        },
+        {
+            level: "LEVEL 1: TEBAK TEORI",
+            question: "Rumus Sturge Approximation (k = 1 + 3.322 log n) digunakan untuk menentukan apa?",
+            options: [
+                "Menentukan Jangkauan (Range)",
+                "Menentukan Ukuran Kelas (Class Size)",
+                "Menentukan Jumlah Kelas (Number of Classes)"
+            ],
+            correct: 2,
+            hasData: false
+        },
+        {
+            level: "LEVEL 2: TANTANGAN HITUNG",
+            question: "Hitunglah nilai Range (R) dari data di atas! (Rumus: Max - Min)",
+            options: [
+                "Range = 30",
+                "Range = 40",
+                "Range = 50"
+            ],
+            correct: 1,
+            hasData: true,
+            dataText: "Data Mentah Nilai Ujian: [50, 65, 70, 85, 90]<br><small>Tips: Nilai Min = 50, Max = 90</small>"
+        },
+        {
+            level: "LEVEL 2: TANTANGAN HITUNG",
+            question: "Jika diketahui Range (R) = 40 dan Jumlah Kelas (k) dibulatkan menjadi 4. Berapakah perkiraan ukuran kelas (p) menggunakan rumus p = R/k?",
+            options: [
+                "p = 10",
+                "p = 5",
+                "p = 15"
+            ],
+            correct: 0,
+            hasData: true,
+            dataText: "Data Pendukung: R = 40, k = 4"
+        },
+        {
+            level: "LEVEL 2: TANTANGAN HITUNG",
+            question: "Sesuai kesepakatan keseragaman di modul, batas bawah untuk kelas pertama sebaiknya dimulai dari nilai apa?",
+            options: [
+                "Dimulai dari nilai Maksimum",
+                "Dimulai dari angka Nol (0)",
+                "Dimulai dari nilai Minimum"
+            ],
+            correct: 2,
+            hasData: false
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    const startScreen = document.getElementById('start-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const questionElement = document.getElementById('question');
+    const optionsElement = document.getElementById('options');
+    const feedbackElement = document.getElementById('feedback');
+    const dataDisplayElement = document.getElementById('data-display');
+    const levelIndicator = document.getElementById('level-indicator');
+    const progressBar = document.getElementById('progress');
+
+    function startGame() {
+        startScreen.classList.add('hide');
+        quizScreen.classList.remove('hide');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        feedbackElement.innerHTML = "";
+        const currentQuestion = quizData[currentQuestionIndex];
+        
+        // Update Progress Bar & Level
+        levelIndicator.innerText = currentQuestion.level;
+        progressBar.style.width = `${(currentQuestionIndex / quizData.length) * 100}%`;
+
+        // Tampilkan Box Data jika diperlukan di Level 2
+        if (currentQuestion.hasData) {
+            dataDisplayElement.innerHTML = currentQuestion.dataText;
+            dataDisplayElement.classList.remove('hide');
+        } else {
+            dataDisplayElement.classList.add('hide');
+        }
+
+        questionElement.innerText = currentQuestion.question;
+        optionsElement.innerHTML = "";
+
+        currentQuestion.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.innerText = option;
+            button.addEventListener('click', () => selectAnswer(index));
+            optionsElement.appendChild(button);
+        });
+    }
+
+    function selectAnswer(selectedIndex) {
+        const currentQuestion = quizData[currentQuestionIndex];
+        const buttons = optionsElement.querySelectorAll('button');
+        
+        // Disable semua tombol setelah memilih agar tidak klik dua kali
+        buttons.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === currentQuestion.correct) {
+            feedbackElement.innerHTML = "<span class='correct'>✅ Benar! Jawaban Anda tepat.</span>";
+            score += 20; // Tiap soal bernilai 20 poin (Level 2 & Teori berbobot seimbang)
+        } else {
+            feedbackElement.innerHTML = `<span class='wrong'>❌ Salah! Jawaban benar: ${currentQuestion.options[currentQuestion.correct]}</span>`;
+        }
+
+        currentQuestionIndex++;
+
+        setTimeout(() => {
+            if (currentQuestionIndex < quizData.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }, 2000); // Pindah soal otomatis setelah 2 detik memberi feedback
+    }
+
+    function showResult() {
+        quizScreen.classList.add('hide');
+        resultScreen.classList.remove('hide');
+        
+        const maxScore = quizData.length * 20;
+        document.getElementById('final-score').innerText = `${score} / ${maxScore} Poin`;
+        
+        const evaluationMsg = document.getElementById('evaluation-msg');
+        if (score === maxScore) {
+            evaluationMsg.innerText = "🏆 SANGAT SEMPURNA! Anda menguasai penuh materi Distribusi Frekuensi!";
+        } else if (score >= 60) {
+            evaluationMsg.innerText = "👍 Bagus! Pemahaman Anda tentang penyusunan data sudah cukup baik.";
+        } else {
+            evaluationMsg.innerText = "📚 Yuk, pelajari lagi file 'Sesi 3.pdf' Anda agar lebih paham langkah-langkah FDT!";
+        }
+    }
+
+    function resetGame() {
+        currentQuestionIndex = 0;
+        score = 0;
+        resultScreen.classList.add('hide');
+        startScreen.classList.remove('hide');
+    }
+</script>
+
+</body>
+</html>
